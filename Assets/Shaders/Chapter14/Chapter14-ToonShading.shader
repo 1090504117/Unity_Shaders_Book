@@ -1,4 +1,7 @@
-﻿Shader "Unity Shaders Book/Chapter 14/Toon Shading" {
+﻿// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+
+Shader "Unity Shaders Book/Chapter 14/Toon Shading" {
 	Properties {
 		_Color ("Color Tint", Color) = (1, 1, 1, 1)
 		_MainTex ("Main Tex", 2D) = "white" {}
@@ -40,7 +43,7 @@
 				
 				float4 pos = mul(UNITY_MATRIX_MV, v.vertex); 
 				float3 normal = mul((float3x3)UNITY_MATRIX_IT_MV, v.normal);  
-				normal.z = -0.5;
+				normal.z = -0;
 				pos = pos + float4(normalize(normal), 0) * _Outline;
 				o.pos = mul(UNITY_MATRIX_P, pos);
 				
@@ -96,10 +99,10 @@
 			v2f vert (a2v v) {
 				v2f o;
 				
-				o.pos = mul( UNITY_MATRIX_MVP, v.vertex);
+				o.pos = UnityObjectToClipPos( v.vertex);
 				o.uv = TRANSFORM_TEX (v.texcoord, _MainTex);
 				o.worldNormal  = UnityObjectToWorldNormal(v.normal);
-				o.worldPos = mul(_Object2World, v.vertex).xyz;
+				o.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
 				
 				TRANSFER_SHADOW(o);
 				
@@ -128,7 +131,7 @@
 				fixed w = fwidth(spec) * 2.0;
 				fixed3 specular = _Specular.rgb * lerp(0, 1, smoothstep(-w, w, spec + _SpecularScale - 1)) * step(0.0001, _SpecularScale);
 				
-				return fixed4(ambient + diffuse + specular, 1.0);
+				return fixed4(ambient + diffuse, 1.0);
 			}
 		
 			ENDCG

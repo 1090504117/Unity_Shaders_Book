@@ -1,3 +1,5 @@
+// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+
 Shader "Unity Shaders Book/Chapter 7/Normal Map In Tangent Space" {
 	Properties {
 		_Color ("Color Tint", Color) = (1, 1, 1, 1)
@@ -75,7 +77,7 @@ Shader "Unity Shaders Book/Chapter 7/Normal Map In Tangent Space" {
 
 			v2f vert(a2v v) {
 				v2f o;
-				o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
+				o.pos = UnityObjectToClipPos(v.vertex);
 				
 				o.uv.xy = v.texcoord.xy * _MainTex_ST.xy + _MainTex_ST.zw;
 				o.uv.zw = v.texcoord.xy * _BumpMap_ST.xy + _BumpMap_ST.zw;
@@ -83,6 +85,8 @@ Shader "Unity Shaders Book/Chapter 7/Normal Map In Tangent Space" {
 				///
 				/// Note that the code below can handle both uniform and non-uniform scales
 				///
+
+
 
 				// Construct a matrix that transforms a point/vector from tangent space to world space
 				fixed3 worldNormal = UnityObjectToWorldNormal(v.normal);  
@@ -94,13 +98,20 @@ Shader "Unity Shaders Book/Chapter 7/Normal Map In Tangent Space" {
 												   worldTangent.z, worldBinormal.z, worldNormal.z, 0.0,
 												   0.0, 0.0, 0.0, 1.0);
 				// The matrix that transforms from world space to tangent space is inverse of tangentToWorld
-				float3x3 worldToTangent = inverse(tangentToWorld);
+				float3x3 rotation = inverse(tangentToWorld);
+
 
 				// Transform the light and view dir from world space to tangent space
-				o.lightDir = mul(worldToTangent, WorldSpaceLightDir(v.vertex));
-				o.viewDir = mul(worldToTangent, WorldSpaceViewDir(v.vertex));
+				
+				//这里用世界空间变换至切线空间的矩阵将（由模型空间转换成的）世界空间下的坐标转成切线空间下的坐标
+				o.lightDir = mul(rotation, WorldSpaceLightDir(v.vertex));
+				o.viewDir = mul(rotation, WorldSpaceViewDir(v.vertex));
 
-				///
+
+
+
+
+				///	下面这种只能处理统一缩放，非同一缩放则会有问题
 				/// Note that the code below can only handle uniform scales, not including non-uniform scales
 				/// 
 

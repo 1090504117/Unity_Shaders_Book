@@ -1,4 +1,7 @@
-﻿Shader "Unity Shaders Book/Chapter 7/Normal Map In World Space" {
+﻿// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+
+Shader "Unity Shaders Book/Chapter 7/Normal Map In World Space" {
 	Properties {
 		_Color ("Color Tint", Color) = (1, 1, 1, 1)
 		_MainTex ("Main Tex", 2D) = "white" {}
@@ -44,14 +47,14 @@
 			
 			v2f vert(a2v v) {
 				v2f o;
-				o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
+				o.pos = UnityObjectToClipPos(v.vertex);
 				
 				o.uv.xy = v.texcoord.xy * _MainTex_ST.xy + _MainTex_ST.zw;
 				o.uv.zw = v.texcoord.xy * _BumpMap_ST.xy + _BumpMap_ST.zw;
 				
-				float3 worldPos = mul(_Object2World, v.vertex).xyz;  
+				float3 worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;  
 				fixed3 worldNormal = UnityObjectToWorldNormal(v.normal);  
-				fixed3 worldTangent = UnityObjectToWorldDir(v.tangent.xyz);  
+				fixed3 worldTangent = UnityObjectToWorldDir(v.tangent.xyz); 
 				fixed3 worldBinormal = cross(worldNormal, worldTangent) * v.tangent.w; 
 				
 				// Compute the matrix that transform directions from tangent space to world space
@@ -68,6 +71,8 @@
 				float3 worldPos = float3(i.TtoW0.w, i.TtoW1.w, i.TtoW2.w);
 				// Compute the light and view dir in world space
 				fixed3 lightDir = normalize(UnityWorldSpaceLightDir(worldPos));
+				//fixed3 lightDir = normalize(_WorldSpaceLightPos0.xyz);
+				
 				fixed3 viewDir = normalize(UnityWorldSpaceViewDir(worldPos));
 				
 				// Get the normal in tangent space
@@ -75,6 +80,17 @@
 				bump.xy *= _BumpScale;
 				bump.z = sqrt(1.0 - saturate(dot(bump.xy, bump.xy)));
 				// Transform the narmal from tangent space to world space
+
+				//float3x3 tangentToWorld = float3x3(i.TtoW0.x, i.TtoW1.x, i.TtoW2.x,
+				//	i.TtoW0.y, i.TtoW1.y, i.TtoW2.y,
+				//	i.TtoW0.z, i.TtoW1.z, i.TtoW2.z);
+
+				//float3x3 tangentToWorld = float3x3(i.TtoW0.x, i.TtoW0.y, i.TtoW0.z,
+				//	i.TtoW1.x, i.TtoW1.y, i.TtoW1.z,
+				//	i.TtoW2.x, i.TtoW2.z, i.TtoW2.z);
+
+				//bump = normalize(mul(tangentToWorld, bump));
+
 				bump = normalize(half3(dot(i.TtoW0.xyz, bump), dot(i.TtoW1.xyz, bump), dot(i.TtoW2.xyz, bump)));
 				
 				fixed3 albedo = tex2D(_MainTex, i.uv).rgb * _Color.rgb;

@@ -100,7 +100,49 @@ public class ProceduralTextureGeneration : MonoBehaviour {
 		// The blur factor
 		float edgeBlur = 1.0f / blurFactor;
 
-		for (int w = 0; w < textureWidth; w++) {
+
+        //正常来说应该是图层叠加算法的。。。，我用另一种算法来试下
+        for (int w = 0; w < textureWidth; w++)
+        {
+            for (int h = 0; h < textureWidth; h++)
+            {
+                proceduralTexture.SetPixel(w, h, backgroundColor);
+            }
+        }
+
+
+        Color pixel = backgroundColor;
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+
+                float circleCenterX = circleInterval * (i + 1);
+                float circleCenterY = circleInterval * (j + 1);
+                for (int w = Mathf.FloorToInt(circleCenterX - radius); w < Mathf.CeilToInt(circleCenterX + radius); w++)
+                {
+                    for (int h = Mathf.FloorToInt(circleCenterY - radius); h < Mathf.CeilToInt(circleCenterY + radius); h++)
+                    {
+                        float dist = Vector2.Distance(new Vector2(w, h), new Vector2(circleCenterX, circleCenterY)) - radius;
+                        Color color;
+                        if (dist > 0)
+                        {
+                            color = pixel;
+                        }
+                        else
+                        {
+                            
+                        }
+                        color = _MixColor(circleColor, backgroundColor, Mathf.SmoothStep(0f, 1.0f, dist * edgeBlur));
+                        proceduralTexture.SetPixel(w, h, color);
+                    }
+                }
+            }
+        }
+
+
+        /*
+        for (int w = 0; w < textureWidth; w++) {
 			for (int h = 0; h < textureWidth; h++) {
 				// Initalize the pixel with background color
 				Color pixel = backgroundColor;
@@ -125,7 +167,7 @@ public class ProceduralTextureGeneration : MonoBehaviour {
 				proceduralTexture.SetPixel(w, h, pixel);
 			}
 		}
-
+        */
 		proceduralTexture.Apply();
 
 		return proceduralTexture;
